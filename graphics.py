@@ -17,19 +17,16 @@ class Car(pygame.sprite.Sprite):
         super().__init__()
         self.x = x
         self.y = y
-        self.tilt = 0
         self.color = color
         self.width = 100
-        self.height = 50
-        self.cabin_width = 80
-        self.cabin_height = 30
+        self.height = 25
+        self.cabin_width = 50
+        self.cabin_height = 10
         self.wheels_color = wheels_color
         self.max_speed = 50 # Maximum speed value in km/h
         self.max_acc = 0.5 # Maximum acceleration value in m/s^2
-        self.max_brake = 1 # Maximum brake value in m/s^2
         self.speed = 0
         self.acc = 0
-        self.brake = 1 
         self.weight = 1000 # Weight of the car in kg
         self.traction = 0.70 # Traction coefficient in range 0-1
         self.engine = Engine(100)
@@ -41,32 +38,26 @@ class Car(pygame.sprite.Sprite):
         pygame.draw.rect(surface, self.color, (self.x + (self.width - self.cabin_width) // 2, self.y - self.height + 5, self.cabin_width, self.cabin_height), border_radius=5)
         pygame.draw.polygon(surface, self.color, [(self.x + (self.width - self.cabin_width) // 2, self.y - self.height + 5), (self.x + (self.width + self.cabin_width) // 2, self.y - self.height + 5), (self.x + self.width, self.y)])
     
+    def gearUp(self):
+        if self.engine.gear < 6:
+            self.engine.gear += 1
+            print("Gear up: ", self.engine.gear)
+    def gearDown(self):
+        if self.engine.gear > 1:
+            self.engine.gear -= 1
+            print("Gear down: ", self.engine.gear)
+
     def apply_accelerate(self):
         self.acc += 0.1/(self.speed+1)
         if self.acc > self.max_acc:
             self.acc = self.max_acc
 
-    def apply_brake(self):
-        self.brake += 0.1
-        if self.brake >= self.max_brake:
-            self.brake = self.max_brake
-        if self.speed <= 0 and self.engine.gear != -1:
-            self.engine.gear = -1
-
     def update_phisics(self):
-        if self.engine.gear == -1:
-            self.speed -= self.acc
-            self.speed += self.brake
-            if self.speed > 0:
-                self.speed = 0
-            self.engine.current_rpm = self.speed * 1000 / 60
-        else:
-            self.speed += self.acc
-            self.speed -= self.brake
-            if self.speed < 0:
-                self.speed = 0
-            self.engine.current_rpm = self.speed * 1000 / 60 / self.engine.gear # nie ma luzu w skrzyni biegów
-            
+        self.speed += self.acc
+        if self.speed < 0:
+            self.speed = 0
+        if self.engine.gear != 0:
+            self.engine.current_rpm = self.speed * 1000 / (0.6 * math.pi * 0.3)
 
         if self.speed >= self.max_speed:
             self.speed = self.max_speed
@@ -78,25 +69,18 @@ class Car(pygame.sprite.Sprite):
             self.acc -= 0.01
             if self.acc < 0:
                 self.acc = 0
-        if self.brake > 0.05:
-            self.brake -= 0.1
-            if self.brake < 0.05:
-                self.brake = 0.05
     def update_position(self):
-        self.x += self.speed
+        self.x += self.speed/3.6 # speed is in km/h, we need to convert it to m/s
 
 class Engine(pygame.sprite.Sprite):
     def __init__(self, power):
         super().__init__()
-        self.gear=1
+        self.gear=0
         self.power = power # Power of the engine in KW
         self.torque = 300 # Torque of the engine in Nm
         self.current_rpm = 0 # Current revolutions per minute
         self.idle_rpm = 900 # Revolutions per minute
         self.max_rpm = 8000 # Maximum revolutions per minute
-        self.fuel_consumption = 100 # Fuel consumption in liters per 100 km
-        self.fuel_tank = 50 # Fuel tank capacity in liters
-        self.fuel = 40 # Current fuel level in liters
 
 class Road(pygame.sprite.Sprite):
     def __init__(self, width, x, y, color):

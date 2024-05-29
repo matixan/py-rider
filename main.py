@@ -36,8 +36,9 @@ road = graphics.Road(SCREEN_WIDTH,0, 0, GREEN)
 
 # create dashboard on the bottom of the screen
 dashboard = graphics.Dashboard(500, 600, BLACK)
-
-while True:     
+lastTimeGearChange = 0
+while True:   
+    lastTimeGearChange += 1  
     for event in pygame.event.get():              
         if event.type == QUIT:
             pygame.quit()      
@@ -54,18 +55,23 @@ while True:
                     print("Game unpaused")
 
     if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_LEFT or event.key == pygame.K_DOWN:
-            car.apply_brake()
-            print("Braking, acc: ", round(car.acc, 4), "speed: ", round(car.speed, 4), "rpm: ", round(car.engine.current_rpm,4), "brake: ", round(car.brake,4))
-        elif event.key == pygame.K_RIGHT or event.key == pygame.K_UP:
+        if event.key == pygame.K_RIGHT:
             car.apply_accelerate()
-            print("Accelerating, acc: ", round(car.acc, 4), "speed: ", round(car.speed, 4), "rpm: ", round(car.engine.current_rpm,4), "brake: ", round(car.brake,4))
-        elif event.key == pygame.K_p:
+            print("Accelerating, acc: ", round(car.acc, 4), "speed: ", round(car.speed, 4), "rpm: ", round(car.engine.current_rpm,4))
+        if event.key == pygame.K_UP:
+            if lastTimeGearChange > 10:
+                car.gearUp()
+                lastTimeGearChange = 0
+        if event.key == pygame.K_DOWN:
+            if lastTimeGearChange > 10:
+                car.gearDown()
+                lastTimeGearChange = 0
+        if event.key == pygame.K_p:
             gamePaused = True
             print("Game paused")
 
     car.engine_idle()
-    print("Idle, acc: ", round(car.acc, 4), "speed: ", round(car.speed, 4), "rpm: ", round(car.engine.current_rpm,4), "brake: ", round(car.brake,4))
+    print("Idle, acc: ", round(car.acc, 4), "speed: ", round(car.speed, 4), "rpm: ", round(car.engine.current_rpm,4))
     menu_window.fill(WHITE)
     car.update_phisics()
     car.update_position()
